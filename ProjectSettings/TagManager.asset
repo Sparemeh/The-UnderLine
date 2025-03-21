@@ -5,6 +5,8 @@ TagManager:
   serializedVersion: 2
   tags:
   - Water
+  - PowerUp
+  - Multiplier
   layers:
   - Default
   - TransparentFX

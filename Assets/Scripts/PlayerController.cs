@@ -7,39 +7,39 @@ using UnityEngine.SceneManagement;
 public class PlayerController : MonoBehaviour
 {
     [Header("Scoring Settings")]
-    public float pointsPerSecond = 10f;  // Points accumulated per second
-    private float score = 0f;
+    public float pointsPerSecond = 10f; 
+    float score = 0f;
 
-
+    // Movement Variables
+    [Header("Movement Settings")]
     [SerializeField]
     float moveSpeed = 5f;
-
     Rigidbody2D rb;
     float horizontalInput;
+    Vector3 originalScale;
+    bool isJumping = false;
 
     [SerializeField]
     float jumpDuration = 0.5f;
 
     [Header("UI Reference")]
-    public TMP_Text scoreText;  // Reference to your TextMeshPro component
+    public TMP_Text scoreText;  
     public GameOverScript gameOverUI;
-
-    private Vector3 originalScale;
-    private bool isJumping = false;
+    public TMP_Text effectsText;
 
     // Mouse-drag movement variables.
-    private bool isDragging = false;
-    private Vector3 dragStartMouseWorldPos;
-    private Vector3 dragStartPlayerPos;
+    bool isDragging = false;
+    Vector3 dragStartMouseWorldPos;
+    Vector3 dragStartPlayerPos;
 
-    private bool isGameActive = true;
+    bool isGameActive = true;
+    bool isInvincible = false;
 
     // Start is called before the first frame update
     void Start()
     {
         rb = GetComponent<Rigidbody2D>();
         originalScale = transform.localScale;
-        
     }
 
     // Update is called once per frame
@@ -55,33 +55,35 @@ public class PlayerController : MonoBehaviour
             scoreText.text = "Score: " + Mathf.FloorToInt(score);
         }
 
-        // Mouse drag movement (left/right)
+        // MOUSE DRAG INPUT
+
+        // Store mouse position on mouse down
         if (Input.GetMouseButtonDown(0))
         {
             isDragging = true;
             dragStartPlayerPos = transform.position;
-            // Convert the initial mouse screen position to world space.
             dragStartMouseWorldPos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-            dragStartMouseWorldPos.z = 0; // Ensure we're working in 2D (z = 0)
+            dragStartMouseWorldPos.z = 0; 
         }
 
+        // While mouse down, update position
         if (Input.GetMouseButton(0) && isDragging)
         {
-            // Convert the current mouse position to world space.
             Vector3 currentMouseWorldPos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
             currentMouseWorldPos.z = 0;
-            // Calculate how far the mouse has moved in the x direction.
             Vector3 delta = currentMouseWorldPos - dragStartMouseWorldPos;
-            // Update player's position with only the x-axis change.
             Vector3 newPos = dragStartPlayerPos + new Vector3(delta.x, 0, 0);
             transform.position = newPos;
         }
 
+        // stop update position when mouse up
         if (Input.GetMouseButtonUp(0))
         {
             isDragging = false;
         }
 
+
+        // LEFT RIGHT KEYBOARD INPUT
         horizontalInput = Input.GetAxisRaw("Horizontal");
         rb.velocity = new Vector2(horizontalInput * moveSpeed, 0);
 
@@ -89,9 +91,9 @@ public class PlayerController : MonoBehaviour
         {
             StartCoroutine(JumpEffect());
         }
-
     }
 
+    // handles ending the game
     public void EndGame()
     {
         isGameActive = false;
@@ -100,13 +102,63 @@ public class PlayerController : MonoBehaviour
         gameOverUI.DisplayMenu(Mathf.FloorToInt(score));
     }
 
+    #region Player Effects
+
+    // handles applying invincibility effects, called from powerup scripts
+    public void ApplyInvincibility(float duration)
+    {
+        StartCoroutine(InvincibilityCoroutine(duration));
+    }
+
+    private IEnumerator InvincibilityCoroutine(float duration)
+    {
+        isInvincible = true;
+        float timeRemaining = duration;
+
+        // Update text to show remaining duration.
+        while (timeRemaining > 0)
+        {
+            effectsText.text = string.Format("Invincible: {0:0.0}s", timeRemaining);
+            timeRemaining -= Time.deltaTime;
+            yield return null;
+        }
+
+        effectsText.text = "";
+        isInvincible = false;
+    }
+
+    // handles applying shrink effects, called from powerup scripts
+    public void ApplyShrink(float duration, float shrinkMultiplier)
+    {
+        StartCoroutine(ShrinkCoroutine(duration, shrinkMultiplier));
+    }
+
+    private IEnumerator ShrinkCoroutine(float duration, float shrinkMultiplier)
+    {
+        Vector3 originalScale = transform.localScale;
+        transform.localScale = originalScale * shrinkMultiplier;
+        float timeRemaining = duration;
+
+        // Update text to show remaining duration.
+        while (timeRemaining > 0)
+        {
+            effectsText.text = string.Format("Shrunk: {0:0.0}s", timeRemaining);
+            timeRemaining -= Time.deltaTime;
+            yield return null;
+        }
+
+        effectsText.text = "";
+        transform.localScale = originalScale;
+    }
+
+    // Handles jump effect, scales up and down the player sprite when jumping
     IEnumerator JumpEffect()
     {
         isJumping = true;
         float halfDuration = jumpDuration / 2f;
         float elapsed = 0f;
 
-        // Scale up phase: interpolate from original scale to the jump scale
+        // Scale up 
         while (elapsed < halfDuration)
         {
             elapsed += Time.deltaTime;
@@ -115,7 +167,7 @@ public class PlayerController : MonoBehaviour
             yield return null;
         }
 
-        // Scale down phase: interpolate back to the original scale
+        // Scale down 
         elapsed = 0f;
         while (elapsed < halfDuration)
         {
@@ -125,10 +177,14 @@ public class PlayerController : MonoBehaviour
             yield return null;
         }
 
-        // Ensure the scale is reset
         transform.localScale = originalScale;
         isJumping = false;
     }
+    #endregion
 
+    #region Getter and Setters
     public bool IsJumping { get { return isJumping; } }
+
+    public bool IsInvincible { get { return isInvincible; } set { isInvincible = value; }}
+    #endregion
 }

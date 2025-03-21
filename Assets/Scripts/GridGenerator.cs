@@ -7,8 +7,6 @@ using UnityEngine.tvOS;
 
 public class GridGenerator : MonoBehaviour
 {
-
-    public GameObject grid;
     public List<GameObject> gridPrefabs;   // List of premade grid prefabs
 
     [Header("Grid Settings")]
@@ -23,7 +21,7 @@ public class GridGenerator : MonoBehaviour
     float removeThreshold = -17f;
 
     [SerializeField]
-    float initialBottomY = 11f;      // Y position for the bottom grid
+    float initialBottomY = 11f;
 
     // List to keep track of currently active grid prefabs
     private List<GameObject> activeGrids = new List<GameObject>();
@@ -48,22 +46,23 @@ public class GridGenerator : MonoBehaviour
         // Check if the bottom grid has passed the remove threshold
         if (activeGrids.Count > 0 && activeGrids[0].transform.position.y < removeThreshold)
         {
-            // Remove the bottom grid
+            // Remove bottom grid
             Destroy(activeGrids[0]);
             activeGrids.RemoveAt(0);
 
-            // Determine the Y position for the new grid based on the current top grid
-            float topY = activeGrids[activeGrids.Count - 1].transform.position.y;
+            // Spawn grid prefab
             SpawnGrid(9 + gridHeight);
         }
     }
 
-    // Spawns a new grid at a specified Y position by selecting a random prefab from the list.
+    // Spawns a random grid at Y position
     void SpawnGrid(float yPosition)
     {
         int randomIndex = UnityEngine.Random.Range(0, gridPrefabs.Count);
         GameObject prefabToSpawn = gridPrefabs[randomIndex];
         GameObject newGrid = Instantiate(prefabToSpawn, new Vector3(1, yPosition, 0), Quaternion.identity, transform);
+
+        // add new grid to list of active grids
         activeGrids.Add(newGrid);
     }
     public List<GameObject> GetActiveGrids()
