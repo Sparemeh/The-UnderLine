@@ -12,20 +12,12 @@ public class GridGenerator : MonoBehaviour
     public List<GameObject> gridPrefabs;   // List of premade grid prefabs
 
     [Header("Grid Settings")]
-    [SerializeField]
-    int gridWidth = 7;
 
     [SerializeField]
     int gridHeight = 18;
 
     [SerializeField]
     float gridSpeed = 4f;
-
-    [SerializeField]
-    float cellSize = 0.5f;
-
-    [SerializeField]
-    float spawnY = 10f;
 
     [SerializeField]
     float removeThreshold = -17f;
@@ -42,7 +34,6 @@ public class GridGenerator : MonoBehaviour
         // Spawn two grids initially.
         SpawnGrid(initialBottomY);                    // Bottom grid
         SpawnGrid(initialBottomY + gridHeight + 4);         // Top grid
-
     }
 
     // Update is called once per frame
@@ -63,7 +54,7 @@ public class GridGenerator : MonoBehaviour
 
             // Determine the Y position for the new grid based on the current top grid
             float topY = activeGrids[activeGrids.Count - 1].transform.position.y;
-            SpawnGrid(26f);
+            SpawnGrid(9 + gridHeight);
         }
     }
 
@@ -74,6 +65,10 @@ public class GridGenerator : MonoBehaviour
         GameObject prefabToSpawn = gridPrefabs[randomIndex];
         GameObject newGrid = Instantiate(prefabToSpawn, new Vector3(1, yPosition, 0), Quaternion.identity, transform);
         activeGrids.Add(newGrid);
+    }
+    public List<GameObject> GetActiveGrids()
+    {
+        return activeGrids;
     }
 
 
